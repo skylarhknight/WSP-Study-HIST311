@@ -1,98 +1,202 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
+# Optional for partial plot
+import statsmodels.api as sm
+
 IN_PATH = "data/processed/analysis_ready_2019.csv"
-
-df = pd.read_csv(IN_PATH)
-
-# --- Figure 1: Scatter (SBA vs Female activity rate)
-plt.figure()
-plt.scatter(df["sba_pct"], df["female_activity_rate_pct"])
-plt.xlabel("Births attended by skilled health personnel (%)")
-plt.ylabel("Female physical activity rate (%)")
-plt.title("Healthcare access and female physical activity (2019)")
-plt.tight_layout()
-plt.savefig("outputs/figures/fig1_scatter_sba_activity.png", dpi=200)
-plt.close()
-
-# --- Figure 2: Scatter + regression line
-x = df["sba_pct"].values
-y = df["female_activity_rate_pct"].values
-
-# Drop NaNs for line fit
-mask = ~np.isnan(x) & ~np.isnan(y)
-m, b = np.polyfit(x[mask], y[mask], 1)
-
-plt.figure()
-plt.scatter(x, y)
-plt.plot(x[mask], m * x[mask] + b)
-plt.xlabel("Births attended by skilled health personnel (%)")
-plt.ylabel("Female physical activity rate (%)")
-plt.title("Linear association (2019)")
-plt.tight_layout()
-plt.savefig("outputs/figures/fig2_scatter_line.png", dpi=200)
-plt.close()
-
-# --- Figure 3 (optional but useful): GDP vs activity (shows confounding)
-plt.figure()
-plt.scatter(df["log_gdp_pc"], df["female_activity_rate_pct"])
-plt.xlabel("Log GDP per capita")
-plt.ylabel("Female physical activity rate (%)")
-plt.title("Economic development and female physical activity (2019)")
-plt.tight_layout()
-plt.savefig("outputs/figures/fig3_scatter_gdp_activity.png", dpi=200)
-plt.close()
-
-print("Saved figures to outputs/figures/")
+OUT_DIR = "outputs/figures"
 
 
-# Figure 4
-df = pd.read_csv("data/processed/analysis_ready_2019.csv")
-
-df["sba_bin"] = pd.cut(df["sba_pct"], bins=[0,70,80,90,95,100])
-
-bin_means = df.groupby("sba_bin")["female_activity_rate_pct"].mean()
-
-plt.figure()
-bin_means.plot(marker="o")
-plt.xlabel("Skilled birth attendance (%) – bins")
-plt.ylabel("Mean female physical activity rate (%)")
-plt.title("Average female activity by healthcare access level (2019)")
-plt.tight_layout()
-plt.savefig("outputs/figures/fig4_binned_means.png", dpi=200)
-plt.close()
+def style_ax(ax):
+    # Clean look: subtle grid, remove top/right spines
+    ax.grid(True, which="major", linewidth=0.8, alpha=0.25)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.tick_params(axis="both", labelsize=11)
+    ax.set_axisbelow(True)
 
 
-
-# Figure 5
-df = pd.read_csv("data/processed/analysis_ready_2019.csv").dropna(subset=["female_activity_rate_pct","sba_pct","log_gdp_pc"])
-
-# Residualize outcome
-y_resid = sm.OLS(df["female_activity_rate_pct"], sm.add_constant(df["log_gdp_pc"])).fit().resid
-
-# Residualize predictor
-x_resid = sm.OLS(df["sba_pct"], sm.add_constant(df["log_gdp_pc"])).fit().resid
-
-m, b = np.polyfit(x_resid, y_resid, 1)
-
-plt.figure()
-plt.scatter(x_resid, y_resid)
-plt.plot(x_resid, m*x_resid + b)
-plt.xlabel("Healthcare access residual (net of GDP)")
-plt.ylabel("Female activity residual (net of GDP)")
-plt.title("Partial association controlling for GDP (2019)")
-plt.tight_layout()
-plt.savefig("outputs/figures/fig5_partial_sba.png", dpi=200)
-plt.close()
+def savefig(fig, path):
+    fig.tight_layout()
+    fig.savefig(path, dpi=250, bbox_inches="tight")
+    plt.close(fig)
 
 
-# Figure 6 
-plt.figure()
-plt.hist(df["female_activity_rate_pct"], bins=15)
-plt.xlabel("Female physical activity rate (%)")
-plt.ylabel("Number of countries")
-plt.title("Distribution of female physical activity across countries (2019)")
-plt.tight_layout()
-plt.savefig("outputs/figures/fig6_activity_distribution.png", dpi=200)
-plt.close()
+def scatter_with_fit(x, y, xlabel, ylabel, title, out_path, jitter_x=0.0):
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+
+    mask = ~np.isnan(x) & ~np.isnan(y)
+    x = x[mask]
+    y = y[mask]
+
+    # Optional jitter to reduce overplotting (useful when x has a ceiling at 100)
+    if jitter_x > 0:
+        rng = np.random.default_rng(42)
+        x_plot = x + rng.normal(0, jitter_x, size=x.shape)
+    else:
+        x_plot = x
+
+    fig = plt.figure(figsize=(8.5, 5.5))
+    ax = plt.gca()
+
+    ax.scatter(x_plot, y, alpha=0.75, s=55)
+
+    # Fit line on *true* x (no jitter) for correct slope
+    if len(x) >= 2:
+        m, b = np.polyfit(x, y, 1)
+        xx = np.linspace(x.min(), x.max(), 200)
+        ax.plot(xx, m * xx + b, linewidth=2.0)
+
+        # Annotate slope in a subtle way
+        ax.text(
+            0.02, 0.95,
+            f"Slope: {m:.3f} pp activity per 1 pp SBA",
+            transform=ax.transAxes,
+            fontsize=11,
+            va="top"
+        )
+
+    ax.set_xlabel(xlabel, fontsize=12)
+    ax.set_ylabel(ylabel, fontsize=12)
+    ax.set_title(title, fontsize=16, pad=12)
+
+    style_ax(ax)
+    savefig(fig, out_path)
+
+
+def binned_means_plot(df, xcol, ycol, bins, xlabel, ylabel, title, out_path):
+    # pd.cut bins -> ordered categories
+    df2 = df[[xcol, ycol]].dropna().copy()
+    df2["bin"] = pd.cut(df2[xcol], bins=bins, include_lowest=True)
+
+    grp = df2.groupby("bin")[ycol]
+    means = grp.mean()
+    counts = grp.size()
+
+    fig = plt.figure(figsize=(8.5, 5.2))
+    ax = plt.gca()
+
+    ax.plot(range(len(means)), means.values, marker="o", linewidth=2.0)
+
+    ax.set_xticks(range(len(means)))
+    ax.set_xticklabels([str(b) for b in means.index], rotation=25, ha="right", fontsize=10)
+
+    # Add N per bin under x labels (simple, readable)
+    for i, (m, n) in enumerate(zip(means.values, counts.values)):
+        ax.text(i, m, f" n={int(n)}", fontsize=10, va="bottom")
+
+    ax.set_xlabel(xlabel, fontsize=12)
+    ax.set_ylabel(ylabel, fontsize=12)
+    ax.set_title(title, fontsize=16, pad=12)
+
+    style_ax(ax)
+    savefig(fig, out_path)
+
+
+def partial_relationship_plot(df, y, x, controls, xlabel, ylabel, title, out_path):
+    """
+    Residualize y and x on controls, then plot residuals with a fit line.
+    """
+    cols = [y, x] + controls
+    d = df[cols].dropna().copy()
+
+    Y = d[y].astype(float)
+    X = d[x].astype(float)
+    C = sm.add_constant(d[controls].astype(float))
+
+    y_resid = sm.OLS(Y, C).fit().resid
+    x_resid = sm.OLS(X, C).fit().resid
+
+    fig = plt.figure(figsize=(8.5, 5.5))
+    ax = plt.gca()
+
+    ax.scatter(x_resid, y_resid, alpha=0.75, s=55)
+
+    if len(x_resid) >= 2:
+        m, b = np.polyfit(x_resid, y_resid, 1)
+        xx = np.linspace(x_resid.min(), x_resid.max(), 200)
+        ax.plot(xx, m * xx + b, linewidth=2.0)
+        ax.text(
+            0.02, 0.95,
+            f"Partial slope: {m:.3f}",
+            transform=ax.transAxes,
+            fontsize=11,
+            va="top"
+        )
+
+    ax.set_xlabel(xlabel, fontsize=12)
+    ax.set_ylabel(ylabel, fontsize=12)
+    ax.set_title(title, fontsize=16, pad=12)
+
+    style_ax(ax)
+    savefig(fig, out_path)
+
+
+def main():
+    df = pd.read_csv(IN_PATH)
+
+    # --- FIG 1: Scatter (SBA vs Female activity) with jitter to reduce stacking
+    scatter_with_fit(
+        x=df["sba_pct"],
+        y=df["female_activity_rate_pct"],
+        xlabel="Births attended by skilled health personnel (%)",
+        ylabel="Female physical activity rate (%)",
+        title="Healthcare access and female physical activity (2019)",
+        out_path=f"{OUT_DIR}/fig1_scatter_sba_activity_pretty.png",
+        jitter_x=0.15,  # small jitter (in percentage points)
+    )
+
+    # --- FIG 2: Same relationship but without jitter (clean raw), with fit
+    scatter_with_fit(
+        x=df["sba_pct"],
+        y=df["female_activity_rate_pct"],
+        xlabel="Births attended by skilled health personnel (%)",
+        ylabel="Female physical activity rate (%)",
+        title="Linear association (2019)",
+        out_path=f"{OUT_DIR}/fig2_scatter_line_pretty.png",
+        jitter_x=0.0,
+    )
+
+    # --- FIG 3: GDP vs activity
+    scatter_with_fit(
+        x=df["log_gdp_pc"],
+        y=df["female_activity_rate_pct"],
+        xlabel="Log GDP per capita",
+        ylabel="Female physical activity rate (%)",
+        title="Economic development and female physical activity (2019)",
+        out_path=f"{OUT_DIR}/fig3_scatter_gdp_activity_pretty.png",
+        jitter_x=0.0,
+    )
+
+    # --- FIG 4: Binned means (recommended because SBA is clumped near 100)
+    binned_means_plot(
+        df=df,
+        xcol="sba_pct",
+        ycol="female_activity_rate_pct",
+        bins=[0, 70, 80, 90, 95, 98, 100],
+        xlabel="Skilled birth attendance (%) bins",
+        ylabel="Mean female physical activity rate (%)",
+        title="Average female activity by healthcare access level (2019)",
+        out_path=f"{OUT_DIR}/fig4_binned_means_pretty.png",
+    )
+
+    # --- FIG 5: Partial relationship (controls for GDP)
+    partial_relationship_plot(
+        df=df,
+        y="female_activity_rate_pct",
+        x="sba_pct",
+        controls=["log_gdp_pc"],
+        xlabel="Healthcare access residual (net of GDP)",
+        ylabel="Female activity residual (net of GDP)",
+        title="Partial association controlling for GDP (2019)",
+        out_path=f"{OUT_DIR}/fig5_partial_sba_gdp_pretty.png",
+    )
+
+    print("Saved pretty figures to outputs/figures/")
+
+
+if __name__ == "__main__":
+    main()
