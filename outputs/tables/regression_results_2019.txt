@@ -1,0 +1,89 @@
+================================================================================
+Model1_bivariate
+                               OLS Regression Results                               
+====================================================================================
+Dep. Variable:     female_activity_rate_pct   R-squared:                       0.051
+Model:                                  OLS   Adj. R-squared:                  0.041
+Method:                       Least Squares   F-statistic:                     10.52
+Date:                      Sun, 14 Dec 2025   Prob (F-statistic):            0.00167
+Time:                              19:31:58   Log-Likelihood:                -369.55
+No. Observations:                        91   AIC:                             743.1
+Df Residuals:                            89   BIC:                             748.1
+Df Model:                                 1                                         
+Covariance Type:                        HC3                                         
+==============================================================================
+                 coef    std err          z      P>|z|      [0.025      0.975]
+------------------------------------------------------------------------------
+Intercept     97.7941      9.526     10.266      0.000      79.123     116.465
+sba_pct       -0.3302      0.102     -3.243      0.001      -0.530      -0.131
+==============================================================================
+Omnibus:                        2.449   Durbin-Watson:                   1.381
+Prob(Omnibus):                  0.294   Jarque-Bera (JB):                2.432
+Skew:                          -0.381   Prob(JB):                        0.296
+Kurtosis:                       2.755   Cond. No.                         936.
+==============================================================================
+
+Notes:
+[1] Standard Errors are heteroscedasticity robust (HC3)
+
+================================================================================
+Model2_plus_gdp
+                               OLS Regression Results                               
+====================================================================================
+Dep. Variable:     female_activity_rate_pct   R-squared:                       0.071
+Model:                                  OLS   Adj. R-squared:                  0.049
+Method:                       Least Squares   F-statistic:                     5.242
+Date:                      Sun, 14 Dec 2025   Prob (F-statistic):            0.00707
+Time:                              19:31:58   Log-Likelihood:                -368.62
+No. Observations:                        91   AIC:                             743.2
+Df Residuals:                            88   BIC:                             750.8
+Df Model:                                 2                                         
+Covariance Type:                        HC3                                         
+==============================================================================
+                 coef    std err          z      P>|z|      [0.025      0.975]
+------------------------------------------------------------------------------
+Intercept    103.9119     11.600      8.958      0.000      81.175     126.648
+sba_pct       -0.2077      0.128     -1.626      0.104      -0.458       0.043
+log_gdp_pc    -1.9130      1.493     -1.282      0.200      -4.839       1.013
+==============================================================================
+Omnibus:                        2.023   Durbin-Watson:                   1.357
+Prob(Omnibus):                  0.364   Jarque-Bera (JB):                2.045
+Skew:                          -0.335   Prob(JB):                        0.360
+Kurtosis:                       2.701   Cond. No.                         986.
+==============================================================================
+
+Notes:
+[1] Standard Errors are heteroscedasticity robust (HC3)
+
+================================================================================
+Model3_plus_gdp_edu
+                               OLS Regression Results                               
+====================================================================================
+Dep. Variable:     female_activity_rate_pct   R-squared:                       0.074
+Model:                                  OLS   Adj. R-squared:                  0.037
+Method:                       Least Squares   F-statistic:                     2.856
+Date:                      Sun, 14 Dec 2025   Prob (F-statistic):             0.0427
+Time:                              19:31:58   Log-Likelihood:                -318.82
+No. Observations:                        79   AIC:                             645.6
+Df Residuals:                            75   BIC:                             655.1
+Df Model:                                 3                                         
+Covariance Type:                        HC3                                         
+================================================================================
+                   coef    std err          z      P>|z|      [0.025      0.975]
+--------------------------------------------------------------------------------
+Intercept      111.9295     15.401      7.268      0.000      81.745     142.114
+sba_pct         -0.3004      0.183     -1.645      0.100      -0.658       0.057
+log_gdp_pc      -3.5762      2.143     -1.669      0.095      -7.776       0.623
+sec_enroll_f     0.1774      0.142      1.252      0.210      -0.100       0.455
+==============================================================================
+Omnibus:                        2.548   Durbin-Watson:                   1.297
+Prob(Omnibus):                  0.280   Jarque-Bera (JB):                2.528
+Skew:                          -0.409   Prob(JB):                        0.282
+Kurtosis:                       2.686   Cond. No.                     1.75e+03
+==============================================================================
+
+Notes:
+[1] Standard Errors are heteroscedasticity robust (HC3)
+[2] The condition number is large, 1.75e+03. This might indicate that there are
+strong multicollinearity or other numerical problems.
+

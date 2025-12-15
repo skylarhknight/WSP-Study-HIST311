@@ -1,0 +1,17 @@
+Key numbers (2019)
+
+N total (with outcome & SBA): 91
+N Model 2 (adds log GDP): 91
+N Model 3 (adds education): 79
+
+Correlation(activity, SBA): -0.226
+
+Standard deviations:
+- SD female activity rate: 14.496
+- SD skilled birth attendance: 9.933
+
+Interpretable effect size (Model 2):
+- Beta on SBA (%-pt activity per 1%-pt SBA): -0.2077
+- 95% CI: [-0.4582, 0.0427]
+- Effect of +10pp SBA: -2.077 percentage points
+- 95% CI for +10pp: [-4.582, 0.427]
