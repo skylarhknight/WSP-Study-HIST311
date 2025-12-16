@@ -10,7 +10,6 @@ OUT_DIR = "outputs/figures"
 
 
 def style_ax(ax):
-    # Clean look: subtle grid, remove top/right spines
     ax.grid(True, which="major", linewidth=0.8, alpha=0.25)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
@@ -32,7 +31,6 @@ def scatter_with_fit(x, y, xlabel, ylabel, title, out_path, jitter_x=0.0):
     x = x[mask]
     y = y[mask]
 
-    # Optional jitter to reduce overplotting (useful when x has a ceiling at 100)
     if jitter_x > 0:
         rng = np.random.default_rng(42)
         x_plot = x + rng.normal(0, jitter_x, size=x.shape)
@@ -44,13 +42,11 @@ def scatter_with_fit(x, y, xlabel, ylabel, title, out_path, jitter_x=0.0):
 
     ax.scatter(x_plot, y, alpha=0.75, s=55)
 
-    # Fit line on *true* x (no jitter) for correct slope
     if len(x) >= 2:
         m, b = np.polyfit(x, y, 1)
         xx = np.linspace(x.min(), x.max(), 200)
         ax.plot(xx, m * xx + b, linewidth=2.0)
 
-        # Annotate slope in a subtle way
         ax.text(
             0.02, 0.95,
             f"Slope: {m:.3f} pp activity per 1 pp SBA",
@@ -68,7 +64,6 @@ def scatter_with_fit(x, y, xlabel, ylabel, title, out_path, jitter_x=0.0):
 
 
 def binned_means_plot(df, xcol, ycol, bins, xlabel, ylabel, title, out_path):
-    # pd.cut bins -> ordered categories
     df2 = df[[xcol, ycol]].dropna().copy()
     df2["bin"] = pd.cut(df2[xcol], bins=bins, include_lowest=True)
 
@@ -84,7 +79,6 @@ def binned_means_plot(df, xcol, ycol, bins, xlabel, ylabel, title, out_path):
     ax.set_xticks(range(len(means)))
     ax.set_xticklabels([str(b) for b in means.index], rotation=25, ha="right", fontsize=10)
 
-    # Add N per bin under x labels (simple, readable)
     for i, (m, n) in enumerate(zip(means.values, counts.values)):
         ax.text(i, m, f" n={int(n)}", fontsize=10, va="bottom")
 

@@ -17,7 +17,7 @@ WHO_BASE = "https://ghoapi.azureedge.net/api"
 WB_BASE = "https://api.worldbank.org/v2"
 YEAR = 2019
 
-WHO_TOP_LIMIT = 1000  # WHO OData enforces $top <= 1000 (your error confirms this)
+WHO_TOP_LIMIT = 1000  # WHO OData enforces $top <= 1000
 
 
 # -----------------------------

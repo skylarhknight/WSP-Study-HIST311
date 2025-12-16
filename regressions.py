@@ -22,7 +22,7 @@ with open(OUT_TEXT, "w") as f:
         f.write(model.summary().as_text())
         f.write("\n\n")
 
-# Build a tidy coefficient table
+# Coefficient table
 rows = []
 for name, model in models.items():
     params = model.params
